@@ -134,6 +134,17 @@ export class ApiConfigService {
     };
   }
 
+  get emailConfig() {
+    return {
+      host: this.getString('EMAIL_HOST'),
+      port: this.getNumber('EMAIL_PORT'),
+      secure: this.getNumber('EMAIL_SECURE') === 1,
+      from: this.getString('EMAIL_FROM'),
+      user: this.getString('EMAIL_USER'),
+      pass: this.getString('EMAIL_PASSWORD'),
+    };
+  }
+
   get appConfig() {
     return {
       port: this.getString('PORT'),

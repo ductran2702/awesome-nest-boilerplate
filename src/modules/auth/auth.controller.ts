@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   Post,
   UploadedFile,
   UseGuards,
@@ -61,6 +62,14 @@ export class AuthController {
       userRegisterDto,
       file,
     );
+    await this.authService.createEmailToken(userRegisterDto.email);
+    const didSent = await this.authService.sendEmailVerification(
+      userRegisterDto.email,
+    );
+
+    if (!didSent) {
+      throw new InternalServerErrorException();
+    }
 
     return createdUser.toDto({
       isActive: true,
