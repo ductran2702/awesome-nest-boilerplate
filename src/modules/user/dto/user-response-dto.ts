@@ -6,7 +6,7 @@ import type { UserEntity } from '../user.entity';
 
 export type UserDtoOptions = Partial<{ isActive: boolean }>;
 
-export class UserDto extends AbstractDto {
+export class UserResponseDto extends AbstractDto {
   @ApiPropertyOptional()
   firstName?: string;
 
@@ -32,12 +32,6 @@ export class UserDto extends AbstractDto {
   phone?: string;
 
   @ApiPropertyOptional()
-  resetPasswordToken?: string;
-
-  @ApiPropertyOptional()
-  resetPasswordExpires?: Date;
-
-  @ApiPropertyOptional()
   isActive?: boolean;
 
   constructor(user: UserEntity, options?: UserDtoOptions) {
@@ -49,8 +43,6 @@ export class UserDto extends AbstractDto {
     this.isEmailConfirmed = user.isEmailConfirmed;
     this.avatar = user.avatar;
     this.phone = user.phone;
-    this.resetPasswordToken = user.resetPasswordToken;
-    this.resetPasswordExpires = user.resetPasswordExpires;
     this.isActive = options?.isActive;
   }
 }

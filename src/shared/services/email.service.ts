@@ -20,7 +20,7 @@ export class EmailService {
     });
   }
 
-  public async sendEmail(options: Mail.Options): Promise<boolean> {
+  async sendEmail(options: Mail.Options): Promise<boolean> {
     const info = await this.nodemailerTransport.sendMail(options);
     console.info('Message sent: %s', info.messageId);
 

@@ -32,6 +32,12 @@ export class UserEntity extends AbstractEntity<UserDto, UserDtoOptions> {
   isEmailConfirmed: boolean;
 
   @Column({ nullable: true })
+  resetPasswordToken?: string;
+
+  @Column({ nullable: true })
+  resetPasswordExpires?: Date;
+
+  @Column({ nullable: true })
   phone?: string;
 
   @Column({ nullable: true })

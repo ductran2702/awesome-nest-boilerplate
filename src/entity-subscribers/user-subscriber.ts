@@ -18,15 +18,27 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
     if (event.entity.password) {
       event.entity.password = UtilsProvider.generateHash(event.entity.password);
     }
+
+    if (event.entity.resetPasswordToken) {
+      event.entity.resetPasswordToken = UtilsProvider.generateHash(
+        event.entity.resetPasswordToken,
+      );
+    }
   }
 
   beforeUpdate(event: UpdateEvent<UserEntity>): void {
-    if (
-      event.entity!.password &&
-      event.entity!.password !== event.databaseEntity.password
-    ) {
+    if (event.entity!.password !== event.databaseEntity.password) {
       event.entity!.password = UtilsProvider.generateHash(
         event.entity!.password,
+      );
+    }
+
+    if (
+      event.entity!.resetPasswordToken !==
+      event.databaseEntity.resetPasswordToken
+    ) {
+      event.entity!.resetPasswordToken = UtilsProvider.generateHash(
+        event.entity!.resetPasswordToken,
       );
     }
   }

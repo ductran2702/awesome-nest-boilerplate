@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { FindConditions } from 'typeorm';
+import type { DeepPartial, FindConditions } from 'typeorm';
 
 import type { PageDto } from '../../common/dto/page.dto';
 import { FileNotImageException } from '../../exceptions/file-not-image.exception';
@@ -9,7 +9,7 @@ import { AwsS3Service } from '../../shared/services/aws-s3.service';
 import { ValidatorService } from '../../shared/services/validator.service';
 import type { Optional } from '../../types';
 import type { UserRegisterDto } from '../auth/dto/UserRegisterDto';
-import type { UserDto } from './dto/user-dto';
+import type { UserResponseDto } from './dto/user-response-dto';
 import type { UsersPageOptionsDto } from './dto/users-page-options.dto';
 import type { UserEntity } from './user.entity';
 import { UserRepository } from './user.repository';
@@ -49,6 +49,10 @@ export class UserService {
     return queryBuilder.getOne();
   }
 
+  async save(userData: DeepPartial<UserEntity>): Promise<UserEntity> {
+    return this.userRepository.save(userData);
+  }
+
   async createUser(
     userRegisterDto: UserRegisterDto,
     file: IFile,
@@ -68,14 +72,14 @@ export class UserService {
 
   async getUsers(
     pageOptionsDto: UsersPageOptionsDto,
-  ): Promise<PageDto<UserDto>> {
+  ): Promise<PageDto<UserResponseDto>> {
     const queryBuilder = this.userRepository.createQueryBuilder('user');
     const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
 
     return items.toPageDto(pageMetaDto);
   }
 
-  async getUser(userId: string): Promise<UserDto> {
+  async getUser(userId: string): Promise<UserResponseDto> {
     const queryBuilder = this.userRepository.createQueryBuilder('user');
 
     queryBuilder.where('user.id = :userId', { userId });

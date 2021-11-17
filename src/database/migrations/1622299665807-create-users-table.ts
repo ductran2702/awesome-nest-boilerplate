@@ -22,6 +22,8 @@ export class CreateUsersTable1622299665807 implements MigrationInterface {
         "password"                character varying,
         "phone"                   character varying,
         "avatar"                  character varying,
+        "reset_password_token"    character varying,
+        "reset_password_expires"  TIMESTAMP,
         CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"),
         CONSTRAINT "UQ_3o7izc6tfo92ou74sgcz9mgr7v0" UNIQUE ("username"),
         CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id")

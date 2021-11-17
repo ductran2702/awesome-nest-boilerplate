@@ -47,5 +47,5 @@ describe('AuthController (e2e)', () => {
       .set({ Authorization: `Bearer ${accessToken}` })
       .expect(200));
 
-  afterAll(async () => await app.close());
+  afterAll(async () => app.close());
 });

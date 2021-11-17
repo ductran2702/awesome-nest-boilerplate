@@ -14,6 +14,7 @@ import { AuthUser } from '../../decorators/auth-user.decorator';
 import { Auth, UUIDParam } from '../../decorators/http.decorators';
 import { TranslationService } from '../../shared/services/translation.service';
 import { UserDto } from './dto/user-dto';
+import type { UserResponseDto } from './dto/user-response-dto';
 import { UsersPageOptionsDto } from './dto/users-page-options.dto';
 import { UserEntity } from './user.entity';
 import { UserService } from './user.service';
@@ -51,7 +52,7 @@ export class UserController {
   getUsers(
     @Query(new ValidationPipe({ transform: true }))
     pageOptionsDto: UsersPageOptionsDto,
-  ): Promise<PageDto<UserDto>> {
+  ): Promise<PageDto<UserResponseDto>> {
     return this.userService.getUsers(pageOptionsDto);
   }
 
@@ -63,7 +64,7 @@ export class UserController {
     description: 'Get users list',
     type: UserDto,
   })
-  getUser(@UUIDParam('id') userId: string): Promise<UserDto> {
+  getUser(@UUIDParam('id') userId: string): Promise<UserResponseDto> {
     return this.userService.getUser(userId);
   }
 }
