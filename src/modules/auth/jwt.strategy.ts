@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import type { RoleType } from '../../common/constants/role-type';
-import { TokenType } from '../../common/constants/token-type';
+import type { TokenType } from '../../common/constants/token-type';
 import { ApiConfigService } from '../../shared/services/api-config.service';
 import type { UserEntity } from '../user/user.entity';
 import { UserService } from '../user/user.service';
@@ -25,9 +25,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     role: RoleType;
     type: TokenType;
   }): Promise<UserEntity> {
-    if (args.type !== TokenType.ACCESS_TOKEN) {
-      throw new UnauthorizedException();
-    }
+    // if (args.type !== TokenType.ACCESS_TOKEN) {
+    //   throw new UnauthorizedException();
+    // }
 
     const user = await this.userService.findOne({
       id: args.userId,

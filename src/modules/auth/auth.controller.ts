@@ -6,6 +6,7 @@ import {
   HttpStatus,
   InternalServerErrorException,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -62,8 +63,7 @@ export class AuthController {
       userRegisterDto,
       file,
     );
-    await this.authService.createEmailToken(userRegisterDto.email);
-    const didSent = await this.authService.sendEmailVerification(
+    const didSent = await this.authService.sendVerificationLink(
       userRegisterDto.email,
     );
 
@@ -74,6 +74,22 @@ export class AuthController {
     return createdUser.toDto({
       isActive: true,
     });
+  }
+
+  @Get('confirm')
+  @HttpCode(HttpStatus.OK)
+  async confirm(@Query('token') token) {
+    const email = await this.authService.decodeConfirmationToken(token);
+    await this.authService.confirmEmail(email);
+  }
+
+  @Post('resend-confirmation-link')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard())
+  @UseInterceptors(AuthUserInterceptor)
+  @ApiBearerAuth()
+  async resendConfirmationLink(@AuthUser() user: UserEntity) {
+    await this.authService.resendConfirmationLink(user.id);
   }
 
   @Version('1')

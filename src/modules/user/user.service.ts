@@ -88,4 +88,13 @@ export class UserService {
 
     return userEntity.toDto();
   }
+
+  async markEmailAsConfirmed(email: string) {
+    return this.userRepository.update(
+      { email },
+      {
+        isEmailConfirmed: true,
+      },
+    );
+  }
 }

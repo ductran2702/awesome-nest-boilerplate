@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import type * as Mail from 'nodemailer/lib/mailer';
 
 import { ApiConfigService } from './api-config.service';
 
 @Injectable()
 export class EmailService {
-  constructor(public readonly configService: ApiConfigService) {}
+  private nodemailerTransport: Mail;
 
-  public async sendEmail(email: string, emailToken: string): Promise<boolean> {
-    const transporter = nodemailer.createTransport({
+  constructor(public readonly configService: ApiConfigService) {
+    this.nodemailerTransport = nodemailer.createTransport({
       host: this.configService.emailConfig.host,
       port: this.configService.emailConfig.port,
       secure: this.configService.emailConfig.secure, // true for 465, false for other ports
@@ -17,22 +18,10 @@ export class EmailService {
         pass: this.configService.emailConfig.pass,
       },
     });
+  }
 
-    const mailOptions = {
-      from: '"Company" <' + this.configService.emailConfig.from + '>',
-      to: email, // list of receivers (separated by ,)
-      subject: 'Verify Email',
-      text: 'Verify Email',
-      html:
-        'Hi! <br><br> Thanks for your registration<br><br>' +
-        '<a href=http://localhost:' +
-        this.configService.appConfig.port +
-        '/auth/email/verify/' +
-        emailToken +
-        '>Click here to activate your account</a>', // html body
-    };
-
-    const info = await transporter.sendMail(mailOptions);
+  public async sendEmail(options: Mail.Options): Promise<boolean> {
+    const info = await this.nodemailerTransport.sendMail(options);
     console.info('Message sent: %s', info.messageId);
 
     return info;
