@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import type { DeepPartial, FindConditions } from 'typeorm';
 
 import type { PageDto } from '../../common/dto/page.dto';
 import { FileNotImageException } from '../../exceptions/file-not-image.exception';
 import { UserNotFoundException } from '../../exceptions/user-not-found.exception';
 import type { IFile } from '../../interfaces';
+import type { ResetPasswordDto } from '../../modules/auth/dto/ResetPasswordDto';
+import { UtilsProvider } from '../../providers/utils.provider';
 import { AwsS3Service } from '../../shared/services/aws-s3.service';
 import { ValidatorService } from '../../shared/services/validator.service';
 import type { Optional } from '../../types';
@@ -51,6 +53,36 @@ export class UserService {
 
   async save(userData: DeepPartial<UserEntity>): Promise<UserEntity> {
     return this.userRepository.save(userData);
+  }
+
+  saveResetToken(user: UserEntity, token: string): Promise<UserEntity> {
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = new Date(Date.now() + 3_600_000); // 1 hour
+
+    return this.userRepository.save(user);
+  }
+
+  async saveNewPassword(
+    user: UserEntity,
+    resetPasswordDto: ResetPasswordDto,
+  ): Promise<UserEntity> {
+    const isTokenValid = await UtilsProvider.validateHash(
+      resetPasswordDto.resetPasswordToken,
+      user.resetPasswordToken,
+    );
+
+    if (!isTokenValid) {
+      throw new HttpException(
+        'Password reset token is invalid or has expired',
+        401,
+      );
+    }
+
+    user.password = resetPasswordDto.newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    return this.userRepository.save(user);
   }
 
   async createUser(

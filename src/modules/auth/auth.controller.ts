@@ -4,7 +4,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  InternalServerErrorException,
   Post,
   Query,
   UploadedFile,
@@ -47,11 +46,7 @@ export class AuthController {
   async userLogin(
     @Body() userLoginDto: UserLoginDto,
   ): Promise<LoginPayloadDto> {
-    const userEntity = await this.authService.validateUser(userLoginDto);
-
-    const token = await this.authService.createToken(userEntity);
-
-    return new LoginPayloadDto(userEntity.toDto(), token);
+    return this.authService.login(userLoginDto);
   }
 
   @Post('forgot-password')
@@ -74,21 +69,7 @@ export class AuthController {
     @Body() userRegisterDto: UserRegisterDto,
     @UploadedFile() file: IFile,
   ): Promise<UserResponseDto> {
-    const createdUser = await this.userService.createUser(
-      userRegisterDto,
-      file,
-    );
-    const didSent = await this.authService.sendVerificationLink(
-      userRegisterDto.email,
-    );
-
-    if (!didSent) {
-      throw new InternalServerErrorException();
-    }
-
-    return createdUser.toDto({
-      isActive: true,
-    });
+    return this.authService.register(userRegisterDto, file);
   }
 
   @Post('reset-password')
@@ -113,7 +94,7 @@ export class AuthController {
   @UseInterceptors(AuthUserInterceptor)
   @ApiBearerAuth()
   async resendConfirmationLink(@AuthUser() user: UserEntity): Promise<boolean> {
-    return this.authService.resendConfirmationLink(user.id);
+    return this.authService.resendConfirmationLinkEmail(user.id);
   }
 
   @Version('1')

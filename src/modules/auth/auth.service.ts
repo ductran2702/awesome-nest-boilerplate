@@ -5,20 +5,23 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as crypto from 'crypto';
 import { MoreThan } from 'typeorm';
 import { DateUtils } from 'typeorm/util/DateUtils';
 
 import { UserNotFoundException } from '../../exceptions/user-not-found.exception';
+import type { IFile } from '../../interfaces';
+import type { UserResponseDto } from '../../modules/user/dto/user-response-dto';
 import { UtilsProvider } from '../../providers/utils.provider';
 import { ApiConfigService } from '../../shared/services/api-config.service';
 import { EmailService } from '../../shared/services/email.service';
 import type { UserDto } from '../user/dto/user-dto';
 import type { UserEntity } from '../user/user.entity';
 import { UserService } from '../user/user.service';
+import { LoginPayloadDto } from './dto/LoginPayloadDto';
 import type { ResetPasswordDto } from './dto/ResetPasswordDto';
 import { TokenPayloadDto } from './dto/TokenPayloadDto';
 import type { UserLoginDto } from './dto/UserLoginDto';
+import type { UserRegisterDto } from './dto/UserRegisterDto';
 import type { ITokenPayload } from './interfaces/ITokenPayload.interface';
 import type { IVerificationTokenPayload } from './interfaces/IVerificationTokenPayload.interface';
 
@@ -40,6 +43,33 @@ export class AuthService {
     });
   }
 
+  async login(userLoginDto: UserLoginDto): Promise<LoginPayloadDto> {
+    const userEntity = await this.validateUser(userLoginDto);
+
+    const token = await this.createToken(userEntity);
+
+    return new LoginPayloadDto(userEntity.toDto(), token);
+  }
+
+  async register(
+    userRegisterDto: UserRegisterDto,
+    file: IFile,
+  ): Promise<UserResponseDto> {
+    const createdUser = await this.userService.createUser(
+      userRegisterDto,
+      file,
+    );
+    const didSent = await this.sendVerificationLinkEmail(userRegisterDto.email);
+
+    if (!didSent) {
+      throw new InternalServerErrorException();
+    }
+
+    return createdUser.toDto({
+      isActive: true,
+    });
+  }
+
   async validateUser(userLoginDto: UserLoginDto): Promise<UserEntity> {
     const user = await this.userService.findOne({
       email: userLoginDto.email,
@@ -56,7 +86,7 @@ export class AuthService {
     return user;
   }
 
-  async sendVerificationLink(email: string): Promise<boolean> {
+  async sendVerificationLinkEmail(email: string): Promise<boolean> {
     const payload: IVerificationTokenPayload = { email };
     const token = this.jwtService.sign(payload);
 
@@ -82,19 +112,21 @@ export class AuthService {
   }
 
   async forgotPassword(email: string): Promise<boolean> {
-    const user = await this.userService.findOne({ email });
+    const user = await this.userService.findByUsernameOrEmail({ email });
 
     if (!user) {
-      throw new UserNotFoundException();
+      return true;
     }
 
-    const token = crypto.randomBytes(20).toString('hex');
+    const token = UtilsProvider.generateToken();
+    await this.userService.saveResetToken(user, token);
+    await this.sendForgotPasswordEmail(email, token);
 
-    user.resetPasswordToken = token;
-    user.resetPasswordExpires = new Date(Date.now() + 3_600_000); // 1 hour
-    await this.userService.save(user);
+    return true;
+  }
 
-    await this.emailService.sendEmail({
+  sendForgotPasswordEmail(email: string, token: string): Promise<boolean> {
+    return this.emailService.sendEmail({
       from: '"Company" <' + this.configService.emailConfig.from + '>',
       to: email, // list of receivers (separated by ,)
       subject: 'Forgot Password Email',
@@ -107,8 +139,6 @@ export class AuthService {
         token +
         '>Click here to reset password</a>', // html body
     });
-
-    return true;
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<boolean> {
@@ -126,23 +156,7 @@ export class AuthService {
       );
     }
 
-    const isTokenValid = await UtilsProvider.validateHash(
-      resetPasswordDto.resetPasswordToken,
-      user.resetPasswordToken,
-    );
-
-    if (!isTokenValid) {
-      throw new HttpException(
-        'Password reset token is invalid or has expired',
-        401,
-      );
-    }
-
-    user.password = resetPasswordDto.newPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-
-    await this.userService.save(user);
+    await this.userService.saveNewPassword(user, resetPasswordDto);
 
     return true;
   }
@@ -181,7 +195,7 @@ export class AuthService {
     return true;
   }
 
-  async resendConfirmationLink(userId: string): Promise<boolean> {
+  async resendConfirmationLinkEmail(userId: string): Promise<boolean> {
     const user = await this.userService.getUser(userId);
 
     if (!user) {
@@ -192,7 +206,7 @@ export class AuthService {
       throw new BadRequestException('Email already confirmed');
     }
 
-    await this.sendVerificationLink(user.email);
+    await this.sendVerificationLinkEmail(user.email);
 
     return true;
   }

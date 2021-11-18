@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 import type { Optional } from '../types';
 
@@ -21,6 +22,14 @@ export class UtilsProvider {
       .toString(36)
       .replace(/[^\dA-Za-z]+/g, '')
       .slice(0, Math.max(0, length));
+  }
+
+  /**
+   * generate random string
+   * @param length
+   */
+  static generateToken(): string {
+    return crypto.randomBytes(20).toString('hex');
   }
 
   /**
