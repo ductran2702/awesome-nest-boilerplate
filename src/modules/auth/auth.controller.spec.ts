@@ -111,7 +111,7 @@ describe('AuthController', () => {
       expect(createSpy).toHaveBeenCalledWith(mockUserLoginDto);
     });
 
-    it('should throw if AuthService create throws', async () => {
+    it('should throw if AuthService login throws', async () => {
       jest.spyOn(service, 'login').mockRejectedValueOnce(new Error('error'));
       await expect(controller.login(mockUserLoginDto)).rejects.toThrow(
         new Error('error'),
@@ -134,7 +134,7 @@ describe('AuthController', () => {
       expect(createSpy).toHaveBeenCalledWith(mockForgotPasswordDto);
     });
 
-    it('should throw if AuthService create throws', async () => {
+    it('should throw if AuthService forgotPassword throws', async () => {
       jest
         .spyOn(service, 'forgotPassword')
         .mockRejectedValueOnce(new Error('error'));
@@ -157,14 +157,14 @@ describe('AuthController', () => {
       expect(createSpy).toHaveBeenCalledWith(mockUserRegisterDto, mockFile);
     });
 
-    it('should throw if AuthService create throws', async () => {
+    it('should throw if AuthService register throws', async () => {
       jest.spyOn(service, 'register').mockRejectedValueOnce(new Error('error'));
       await expect(
         controller.register(mockUserRegisterDto, mockFile),
       ).rejects.toThrow(new Error('error'));
     });
 
-    it('should return true when success', async () => {
+    it('should return a UserResponseDto when success', async () => {
       jest
         .spyOn(service, 'register')
         .mockResolvedValueOnce(mockUserResponseDto);
@@ -180,7 +180,7 @@ describe('AuthController', () => {
       expect(createSpy).toHaveBeenCalledWith(mockResetPasswordDto);
     });
 
-    it('should throw if AuthService create throws', async () => {
+    it('should throw if AuthService resetPassword throws', async () => {
       jest
         .spyOn(service, 'resetPassword')
         .mockRejectedValueOnce(new Error('error'));
@@ -203,7 +203,7 @@ describe('AuthController', () => {
       expect(createSpy).toHaveBeenCalledWith(mockToken);
     });
 
-    it('should throw if AuthService create throws', async () => {
+    it('should throw if AuthService confirmEmail throws', async () => {
       jest
         .spyOn(service, 'confirmEmail')
         .mockRejectedValueOnce(new Error('error'));
@@ -226,7 +226,7 @@ describe('AuthController', () => {
       expect(createSpy).toHaveBeenCalledWith(mockUserDto);
     });
 
-    it('should throw if AuthService create throws', async () => {
+    it('should throw if AuthService resendConfirmationLinkEmail throws', async () => {
       jest
         .spyOn(service, 'resendConfirmationLinkEmail')
         .mockRejectedValueOnce(new Error('error'));
