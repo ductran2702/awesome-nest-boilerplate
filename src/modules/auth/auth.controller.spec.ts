@@ -106,9 +106,9 @@ describe('AuthController', () => {
 
   describe('login()', () => {
     it('should call AuthService login with correct values', async () => {
-      const createSpy = jest.spyOn(service, 'login');
+      const spy = jest.spyOn(service, 'login');
       await controller.login(mockUserLoginDto);
-      expect(createSpy).toHaveBeenCalledWith(mockUserLoginDto);
+      expect(spy).toHaveBeenCalledWith(mockUserLoginDto);
     });
 
     it('should throw if AuthService login throws', async () => {
@@ -129,9 +129,9 @@ describe('AuthController', () => {
 
   describe('forgotPassword()', () => {
     it('should call AuthService forgotPassword with correct values', async () => {
-      const createSpy = jest.spyOn(service, 'forgotPassword');
+      const spy = jest.spyOn(service, 'forgotPassword');
       await controller.forgotPassword(mockForgotPasswordDto);
-      expect(createSpy).toHaveBeenCalledWith(mockForgotPasswordDto);
+      expect(spy).toHaveBeenCalledWith(mockForgotPasswordDto);
     });
 
     it('should throw if AuthService forgotPassword throws', async () => {
@@ -152,9 +152,9 @@ describe('AuthController', () => {
 
   describe('register()', () => {
     it('should call AuthService register with correct values', async () => {
-      const createSpy = jest.spyOn(service, 'register');
+      const spy = jest.spyOn(service, 'register');
       await controller.register(mockUserRegisterDto, mockFile);
-      expect(createSpy).toHaveBeenCalledWith(mockUserRegisterDto, mockFile);
+      expect(spy).toHaveBeenCalledWith(mockUserRegisterDto, mockFile);
     });
 
     it('should throw if AuthService register throws', async () => {
@@ -175,9 +175,9 @@ describe('AuthController', () => {
 
   describe('resetPassword()', () => {
     it('should call AuthService resetPassword with correct values', async () => {
-      const createSpy = jest.spyOn(service, 'resetPassword');
+      const resetPasswordSpy = jest.spyOn(service, 'resetPassword');
       await controller.resetPassword(mockResetPasswordDto);
-      expect(createSpy).toHaveBeenCalledWith(mockResetPasswordDto);
+      expect(resetPasswordSpy).toHaveBeenCalledWith(mockResetPasswordDto);
     });
 
     it('should throw if AuthService resetPassword throws', async () => {
@@ -198,9 +198,9 @@ describe('AuthController', () => {
 
   describe('confirmEmail()', () => {
     it('should call AuthService confirmEmail with correct values', async () => {
-      const createSpy = jest.spyOn(service, 'confirmEmail');
+      const spy = jest.spyOn(service, 'confirmEmail');
       await controller.confirmEmail(mockToken);
-      expect(createSpy).toHaveBeenCalledWith(mockToken);
+      expect(spy).toHaveBeenCalledWith(mockToken);
     });
 
     it('should throw if AuthService confirmEmail throws', async () => {
@@ -221,9 +221,9 @@ describe('AuthController', () => {
 
   describe('resendConfirmationLinkEmail()', () => {
     it('should call AuthService resendConfirmationLinkEmail with correct values', async () => {
-      const createSpy = jest.spyOn(service, 'resendConfirmationLinkEmail');
+      const spy = jest.spyOn(service, 'resendConfirmationLinkEmail');
       await controller.resendConfirmationLinkEmail(mockUserDto);
-      expect(createSpy).toHaveBeenCalledWith(mockUserDto);
+      expect(spy).toHaveBeenCalledWith(mockUserDto);
     });
 
     it('should throw if AuthService resendConfirmationLinkEmail throws', async () => {
