@@ -26,6 +26,12 @@ export class UserRegisterDto {
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
+  @Trim()
+  readonly username: string;
+
+  @ApiProperty()
+  @IsString()
   @IsEmail()
   @IsNotEmpty()
   @Trim()

@@ -10,13 +10,14 @@ import { DateUtils } from 'typeorm/util/DateUtils';
 
 import { UserNotFoundException } from '../../exceptions/user-not-found.exception';
 import type { IFile } from '../../interfaces';
-import type { UserResponseDto } from '../../modules/user/dto/user-response-dto';
+import { UserResponseDto } from '../../modules/user/dto/user-response-dto';
 import { UtilsProvider } from '../../providers/utils.provider';
 import { ApiConfigService } from '../../shared/services/api-config.service';
 import { EmailService } from '../../shared/services/email.service';
 import type { UserDto } from '../user/dto/user-dto';
 import type { UserEntity } from '../user/user.entity';
 import { UserService } from '../user/user.service';
+import type { ForgotPasswordDto } from './dto/ForgotPasswordDto';
 import { LoginPayloadDto } from './dto/LoginPayloadDto';
 import type { ResetPasswordDto } from './dto/ResetPasswordDto';
 import { TokenPayloadDto } from './dto/TokenPayloadDto';
@@ -48,7 +49,7 @@ export class AuthService {
 
     const token = await this.createToken(userEntity);
 
-    return new LoginPayloadDto(userEntity.toDto(), token);
+    return new LoginPayloadDto(new UserResponseDto(userEntity), token);
   }
 
   async register(
@@ -111,7 +112,8 @@ export class AuthService {
     return true;
   }
 
-  async forgotPassword(email: string): Promise<boolean> {
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<boolean> {
+    const { email } = forgotPasswordDto;
     const user = await this.userService.findByUsernameOrEmail({ email });
 
     if (!user) {
@@ -179,7 +181,9 @@ export class AuthService {
     }
   }
 
-  async confirmEmail(email: string): Promise<boolean> {
+  async confirmEmail(token: string): Promise<boolean> {
+    const email = await this.decodeConfirmationToken(token);
+
     const user = await this.userService.findByUsernameOrEmail({ email });
 
     if (!user) {
@@ -195,13 +199,7 @@ export class AuthService {
     return true;
   }
 
-  async resendConfirmationLinkEmail(userId: string): Promise<boolean> {
-    const user = await this.userService.getUser(userId);
-
-    if (!user) {
-      throw new UserNotFoundException();
-    }
-
+  async resendConfirmationLinkEmail(user: UserDto): Promise<boolean> {
     if (user.isEmailConfirmed) {
       throw new BadRequestException('Email already confirmed');
     }

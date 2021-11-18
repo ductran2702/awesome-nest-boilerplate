@@ -16,10 +16,10 @@ export class UserResponseDto extends AbstractDto {
   @ApiProperty()
   username: string;
 
-  @ApiPropertyOptional({ enum: RoleType })
+  @ApiProperty({ enum: RoleType })
   role: RoleType;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   email: string;
 
   @ApiProperty()

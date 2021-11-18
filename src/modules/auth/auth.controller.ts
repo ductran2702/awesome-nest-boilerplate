@@ -20,8 +20,6 @@ import { AuthUserInterceptor } from '../../interceptors/auth-user-interceptor.se
 import { IFile } from '../../interfaces';
 import { UserDto } from '../user/dto/user-dto';
 import { UserResponseDto } from '../user/dto/user-response-dto';
-import { UserEntity } from '../user/user.entity';
-import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 import { ForgotPasswordDto } from './dto/ForgotPasswordDto';
 import { LoginPayloadDto } from './dto/LoginPayloadDto';
@@ -32,10 +30,7 @@ import { UserRegisterDto } from './dto/UserRegisterDto';
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
-  constructor(
-    public readonly userService: UserService,
-    public readonly authService: AuthService,
-  ) {}
+  constructor(public readonly authService: AuthService) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -43,9 +38,7 @@ export class AuthController {
     type: LoginPayloadDto,
     description: 'User info with access token',
   })
-  async userLogin(
-    @Body() userLoginDto: UserLoginDto,
-  ): Promise<LoginPayloadDto> {
+  async login(@Body() userLoginDto: UserLoginDto): Promise<LoginPayloadDto> {
     return this.authService.login(userLoginDto);
   }
 
@@ -58,14 +51,17 @@ export class AuthController {
   async forgotPassword(
     @Body() forgotPasswordDto: ForgotPasswordDto,
   ): Promise<boolean> {
-    return this.authService.forgotPassword(forgotPasswordDto.email);
+    return this.authService.forgotPassword(forgotPasswordDto);
   }
 
   @Post('register')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: UserDto, description: 'Successfully Registered' })
+  @ApiOkResponse({
+    type: UserResponseDto,
+    description: 'Successfully Registered',
+  })
   @ApiFile({ name: 'avatar' })
-  async userRegister(
+  async register(
     @Body() userRegisterDto: UserRegisterDto,
     @UploadedFile() file: IFile,
   ): Promise<UserResponseDto> {
@@ -82,10 +78,8 @@ export class AuthController {
 
   @Get('confirm-email')
   @HttpCode(HttpStatus.OK)
-  async confirm(@Query('token') token): Promise<boolean> {
-    const email = await this.authService.decodeConfirmationToken(token);
-
-    return this.authService.confirmEmail(email);
+  async confirmEmail(@Query('token') token): Promise<boolean> {
+    return this.authService.confirmEmail(token);
   }
 
   @Post('resend-confirmation-link')
@@ -93,8 +87,10 @@ export class AuthController {
   @UseGuards(AuthGuard())
   @UseInterceptors(AuthUserInterceptor)
   @ApiBearerAuth()
-  async resendConfirmationLink(@AuthUser() user: UserEntity): Promise<boolean> {
-    return this.authService.resendConfirmationLinkEmail(user.id);
+  async resendConfirmationLinkEmail(
+    @AuthUser() user: UserDto,
+  ): Promise<boolean> {
+    return this.authService.resendConfirmationLinkEmail(user);
   }
 
   @Version('1')
@@ -104,7 +100,7 @@ export class AuthController {
   @UseInterceptors(AuthUserInterceptor)
   @ApiBearerAuth()
   @ApiOkResponse({ type: UserResponseDto, description: 'current user info' })
-  getCurrentUser(@AuthUser() user: UserEntity): UserResponseDto {
-    return user.toDto();
+  getCurrentUser(@AuthUser() user: UserDto): UserResponseDto {
+    return user;
   }
 }
