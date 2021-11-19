@@ -162,7 +162,8 @@ export class AuthService {
     return true;
   }
 
-  decodeConfirmationToken(token: string): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async decodeConfirmationToken(token: string): Promise<string> {
     try {
       const payload = this.jwtService.verify(token);
 
