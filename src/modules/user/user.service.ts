@@ -83,8 +83,8 @@ export class UserService {
     }
 
     user.password = resetPasswordDto.newPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    user.resetPasswordToken = '';
+    user.resetPasswordExpires = new Date();
 
     return this.userRepository.save(user);
   }

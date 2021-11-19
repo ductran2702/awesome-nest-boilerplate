@@ -37,9 +37,9 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
       event.entity!.resetPasswordToken !==
       event.databaseEntity.resetPasswordToken
     ) {
-      event.entity!.resetPasswordToken = UtilsProvider.generateHash(
-        event.entity!.resetPasswordToken,
-      );
+      event.entity!.resetPasswordToken = event.entity!.resetPasswordToken
+        ? UtilsProvider.generateHash(event.entity!.resetPasswordToken)
+        : undefined;
     }
   }
 }

@@ -1,3 +1,4 @@
+import { HttpException } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { DeepPartial, FindConditions } from 'typeorm';
@@ -5,8 +6,10 @@ import type { DeepPartial, FindConditions } from 'typeorm';
 import { RoleType } from '../../common/constants/role-type';
 import { FileNotImageException } from '../../exceptions/file-not-image.exception';
 import type { IFile } from '../../interfaces';
+import { UtilsProvider } from '../../providers/utils.provider';
 import { AwsS3Service } from '../../shared/services/aws-s3.service';
 import { ValidatorService } from '../../shared/services/validator.service';
+import type { ResetPasswordDto } from '../auth/dto/ResetPasswordDto';
 import type { UserRegisterDto } from '../auth/dto/UserRegisterDto';
 import type { UserEntity } from './user.entity';
 import { UserRepository } from './user.repository';
@@ -23,26 +26,6 @@ describe('UserService', () => {
     email: 'string',
   };
 
-  // const mockUserResponseDto: UserResponseDto = {
-  //   id: 'string',
-  //   createdAt: new Date(),
-  //   updatedAt: new Date(),
-  //   firstName: 'string',
-  //   lastName: 'string',
-  //   username: 'string',
-  //   role: RoleType.USER,
-  //   email: 'string',
-  //   isEmailConfirmed: true,
-  //   avatar: 'string',
-  //   phone: 'string',
-  //   isActive: true,
-  // };
-  // const mockUserDto: UserDto = {
-  //   ...mockUserResponseDto,
-  //   resetPasswordToken: 'string',
-  //   resetPasswordExpires: new Date(),
-  // };
-
   const mockUserEntity = {
     id: 'string',
     createdAt: new Date(),
@@ -56,8 +39,8 @@ describe('UserService', () => {
     avatar: 'string',
     phone: 'string',
     password: 'string',
-    resetPasswordToken: 'string',
-    resetPasswordExpires: new Date(),
+    resetPasswordToken: UtilsProvider.generateHash('resetPasswordToken'),
+    resetPasswordExpires: new Date(Date.now() + 3_600_000),
   };
 
   const partailUserData: DeepPartial<UserEntity> = {
@@ -81,11 +64,11 @@ describe('UserService', () => {
     originalname: 'string',
     size: 0,
   };
-  // const mockResetPasswordDto: ResetPasswordDto = {
-  //   email: 'string',
-  //   newPassword: 'string',
-  //   resetPasswordToken: 'string',
-  // };
+  const mockResetPasswordDto: ResetPasswordDto = {
+    email: 'string',
+    newPassword: 'string',
+    resetPasswordToken: 'resetPasswordToken',
+  };
 
   const mockToken = 'token';
   const now = new Date();
@@ -187,7 +170,7 @@ describe('UserService', () => {
         .spyOn(repository, 'save')
         .mockResolvedValueOnce(mockNewUserEntity);
       await service.saveResetToken(
-        mockUserEntity as UserEntity,
+        { ...mockUserEntity } as UserEntity,
         mockToken,
         now,
       );
@@ -202,7 +185,7 @@ describe('UserService', () => {
       } as UserEntity;
       jest.spyOn(repository, 'save').mockResolvedValueOnce(mockNewUserEntity);
       const response = await service.saveResetToken(
-        mockUserEntity as UserEntity,
+        { ...mockUserEntity } as UserEntity,
         mockToken,
         now,
       );
@@ -255,35 +238,48 @@ describe('UserService', () => {
     });
   });
 
-  // describe('saveNewPassword()', () => {
-  //   it('should call UserRepository save with correct values', async () => {
-  //     const saveSpy = jest.spyOn(repository, 'save').mockResolvedValueOnce(mockUserEntity as UserEntity);
+  describe('saveNewPassword()', () => {
+    it('should call UserRepository save with correct values', async () => {
+      const saveSpy = jest
+        .spyOn(repository, 'save')
+        .mockResolvedValueOnce(mockUserEntity as UserEntity);
 
-  //     await service.saveNewPassword(mockUserEntity as UserEntity, mockResetPasswordDto);
-  //     mockUserEntity.password = mockResetPasswordDto.newPassword;
-  //     //mockUserEntity.resetPasswordToken = undefined;
-  //     //mockUserEntity.resetPasswordExpires = undefined;
+      await service.saveNewPassword(
+        { ...mockUserEntity } as UserEntity,
+        mockResetPasswordDto,
+      );
 
-  //     //expect(saveSpy).toHaveBeenCalledWith(mockUserEntity);
-  //   });
+      expect(saveSpy).toHaveBeenCalled();
+    });
 
-  // it('should throw if UserRepository save throws', async () => {
-  //   jest.spyOn(repository, 'create').mockReturnValueOnce(mockUserEntity as UserEntity);
-  //   jest.spyOn(validatorService, 'isImage').mockReturnValueOnce(false);
-  //   jest.spyOn(awsS3Service, 'uploadImage').mockResolvedValueOnce("");
-  //   await expect(service.saveNewPassword(mockUserRegisterDto, mockFile)).rejects.toThrow(
-  //     new FileNotImageException(),
-  //   );
-  // });
+    it('should throw if HttpException when Password reset token is invalid', async () => {
+      await expect(
+        service.saveNewPassword(
+          { ...mockUserEntity, resetPasswordToken: 'wrong' } as UserEntity,
+          mockResetPasswordDto,
+        ),
+      ).rejects.toThrow(
+        new HttpException(
+          'Password reset token is invalid or has expired',
+          401,
+        ),
+      );
+    });
 
-  // it('should return a correct value when success', async () => {
-  //   jest.spyOn(repository, 'create').mockReturnValueOnce(mockUserEntity as UserEntity);
-  //   jest.spyOn(validatorService, 'isImage').mockReturnValueOnce(true);
-  //   jest.spyOn(awsS3Service, 'uploadImage').mockResolvedValueOnce("");
-  //   jest.spyOn(repository, 'create').mockReturnValueOnce(mockUserEntity as UserEntity);
-  //   jest.spyOn(repository, 'save').mockResolvedValueOnce(mockUserEntity as UserEntity);
-  //   const response = await service.saveNewPassword(mockUserRegisterDto, mockFile);
-  //   expect(response).toEqual(mockUserEntity);
-  // });
-  //});
+    it('should return a correct value when success', async () => {
+      const newMockUserEntity = {
+        ...mockUserEntity,
+        resetPasswordToken: '',
+        resetPasswordExpires: new Date(),
+      };
+      jest
+        .spyOn(repository, 'save')
+        .mockResolvedValueOnce(newMockUserEntity as UserEntity);
+      const response = await service.saveNewPassword(
+        mockUserEntity as UserEntity,
+        mockResetPasswordDto,
+      );
+      expect(response).toEqual(newMockUserEntity);
+    });
+  });
 });
