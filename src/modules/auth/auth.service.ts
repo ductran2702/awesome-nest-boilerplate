@@ -105,11 +105,7 @@ export class AuthService {
         '>Click here to activate your account</a>', // html body
     });
 
-    if (!hasInfo) {
-      throw new InternalServerErrorException();
-    }
-
-    return true;
+    return Boolean(hasInfo);
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<boolean> {
@@ -120,11 +116,14 @@ export class AuthService {
       return true;
     }
 
-    const token = UtilsProvider.generateToken();
-    await this.userService.saveResetToken(user, token);
-    await this.sendForgotPasswordEmail(email, token);
+    const token = UtilsProvider.generateRandomToken();
+    await this.userService.saveResetToken(
+      user,
+      token,
+      new Date(Date.now() + 3_600_000),
+    );
 
-    return true;
+    return this.sendForgotPasswordEmail(email, token);
   }
 
   sendForgotPasswordEmail(email: string, token: string): Promise<boolean> {
@@ -163,9 +162,9 @@ export class AuthService {
     return true;
   }
 
-  async decodeConfirmationToken(token: string): Promise<string> {
+  decodeConfirmationToken(token: string): Promise<string> {
     try {
-      const payload = await this.jwtService.verify(token);
+      const payload = this.jwtService.verify(token);
 
       if (typeof payload === 'object' && 'email' in payload) {
         return payload.email;

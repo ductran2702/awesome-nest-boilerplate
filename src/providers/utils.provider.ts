@@ -28,7 +28,7 @@ export class UtilsProvider {
    * generate random string
    * @param length
    */
-  static generateToken(): string {
+  static generateRandomToken(): string {
     return crypto.randomBytes(20).toString('hex');
   }
 

@@ -24,6 +24,6 @@ export class EmailService {
     const info = await this.nodemailerTransport.sendMail(options);
     console.info('Message sent: %s', info.messageId);
 
-    return info;
+    return Boolean(info);
   }
 }

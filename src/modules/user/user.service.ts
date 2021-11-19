@@ -55,9 +55,13 @@ export class UserService {
     return this.userRepository.save(userData);
   }
 
-  saveResetToken(user: UserEntity, token: string): Promise<UserEntity> {
+  saveResetToken(
+    user: UserEntity,
+    token: string,
+    resetPasswordExpires: Date,
+  ): Promise<UserEntity> {
     user.resetPasswordToken = token;
-    user.resetPasswordExpires = new Date(Date.now() + 3_600_000); // 1 hour
+    user.resetPasswordExpires = resetPasswordExpires; // 1 hour
 
     return this.userRepository.save(user);
   }
